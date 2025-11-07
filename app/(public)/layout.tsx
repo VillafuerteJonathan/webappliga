@@ -4,7 +4,7 @@ import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Header from "@/components/layout/Header";
 
-export default function PrivadoLayout({
+export default function PuolicLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -30,6 +30,7 @@ export default function PrivadoLayout({
         {/* ✅ Aquí ya funciona correctamente */}
         <Header onToggleSidebar={handleToggleSidebar} />
         <main className="p-6">
+          <h1 className="text-2xl font-bold text-gray-800">Hola</h1>
           {children}
         </main>
       </div>

@@ -201,9 +201,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
         {role === "publico" && (
           <>
-            {navItem("/(publico)/home", "Inicio")}
-            {navItem("/(publico)/tabla-posiciones", "Tabla de posiciones")}
-            {navItem("/(publico)/partidos-recientes", "Últimos partidos")}
+            {navItem("/dashboard", "Inicio")}
+            {navItem("/tabla-posiciones", "Tabla de posiciones")}
+            {navItem("/partidos-recientes", "Últimos partidos")}
           </>
         )}
       </nav>
