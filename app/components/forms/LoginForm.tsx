@@ -27,8 +27,12 @@ export default function LoginForm() {
       }
 
       const data = await res.json();
+      
+      // Guardar todos los datos en localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("userName", data.name);
+      localStorage.setItem("role", data.role); // ← Aquí guardamos el rol
+      localStorage.setItem("userId", data.userId); // ← También es útil guardar el ID
 
       router.push("/dashboard");
     } catch (err: any) {

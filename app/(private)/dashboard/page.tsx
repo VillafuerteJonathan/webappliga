@@ -1,21 +1,11 @@
 "use client";
 
-import Sidebar from "@/components/layout/Sidebar";
-import  Header  from "@/components/layout/Header";
-
-export default function PrivadoLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardPage() {
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <Sidebar />
-
-      <main className="flex-1 ml-64">
-        <Header />
-        <div className="p-8">{children}</div>
-      </main>
+    <div className="p-6">
+      <h2 className="text-xl font-semibold text-gray-700">
+        Bienvenido al sistema
+      </h2>
     </div>
   );
 }

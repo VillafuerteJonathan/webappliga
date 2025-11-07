@@ -2,150 +2,215 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+import { useEffect, useState } from "react";
+import {jwtDecode} from "jwt-decode"; // ✅ import default
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+interface DecodedToken {
+  name: string;
+  email: string;
+  role: string;
+  exp: number;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [openSection, setOpenSection] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false); // 👈 controla el menú hamburguesa
+  const [role, setRole] = useState<string>("publico");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded: DecodedToken = jwtDecode(token); // ✅ aquí usamos jwtDecode
+        setRole(decoded.role);
+      } catch (err) {
+        console.error("Token inválido");
+        setRole("publico");
+      }
+    } else {
+      setRole("publico");
+    }
+
+    const handleStorageChange = () => {
+      const t = localStorage.getItem("token");
+      if (t) {
+        try {
+          const decoded: DecodedToken = jwtDecode(t);
+          setRole(decoded.role);
+        } catch {
+          setRole("publico");
+        }
+      } else {
+        setRole("publico");
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
   };
 
-  const toggleSidebar = () => {
-    setIsOpen(!isOpen);
-  };
-
   const navItem = (href: string, label: string) => (
     <Link
       href={href}
-      className={`block px-6 py-2 rounded-md text-sm transition font-medium ${
+      onClick={onClose}
+      className={`block px-6 py-2 rounded-md text-sm font-medium transition-colors ${
         pathname === href
           ? "bg-[#004C97] text-white"
           : "text-gray-700 hover:bg-blue-50"
       }`}
-      onClick={() => setIsOpen(false)} // 👈 cierra menú al hacer clic
     >
       {label}
     </Link>
   );
 
   return (
-    <>
-      {/* Botón Hamburguesa (solo móvil) */}
-      <button
-        onClick={toggleSidebar}
-        className="md:hidden fixed top-4 left-4 z-50 bg-[#004C97] text-white p-2 rounded-md shadow-md focus:outline-none"
-        aria-label="Abrir menú"
-      >
-        {isOpen ? <X size={22} /> : <Menu size={22} />}
-      </button>
+    <aside
+      className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 shadow-md flex flex-col transition-all duration-300 ease-in-out z-40 ${
+        isOpen ? "translate-x-0" : "-translate-x-64"
+      }`}
+    >
+      <div className="px-6 py-4 bg-gradient-to-r from-[#004C97] to-[#00923F] text-white font-bold text-lg shadow">
+        Panel LDP
+      </div>
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-white border-r border-gray-200 shadow-md flex flex-col transform transition-transform duration-300 z-40
-        ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-        md:translate-x-0`} // 👈 visible por defecto en escritorio
-      >
-        {/* Encabezado */}
-        <div className="px-6 py-4 bg-gradient-to-r from-[#004C97] to-[#00923F] text-white font-bold text-lg shadow flex items-center justify-between">
-          <span>Panel LDP</span>
-          <button
-            onClick={toggleSidebar}
-            className="md:hidden text-white focus:outline-none"
-          >
-            <X size={20} />
-          </button>
-        </div>
+      <nav className="flex-1 overflow-y-auto mt-4 space-y-1">
+        {role === "admin" && (
+          <>
+            {navItem("/dashboard", "Dashboard")}
+            {/* Gestión */}
+            <div>
+              <button
+                onClick={() => toggleSection("gestion")}
+                className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
+              >
+                <span>Gestión</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-300 ${
+                    openSection === "gestion" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {openSection === "gestion" && (
+                <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
+                  {navItem("/gestion/canchas", "Canchas")}
+                  {navItem("/(privado)/gestion/arbitros", "Árbitros")}
+                  {navItem("/(privado)/gestion/equipos", "Equipos")}
+                </div>
+              )}
+            </div>
+            {/* Campeonatos */}
+            <div>
+              <button
+                onClick={() => toggleSection("campeonatos")}
+                className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
+              >
+                <span>Campeonatos</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-300 ${
+                    openSection === "campeonatos" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {openSection === "campeonatos" && (
+                <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
+                  {navItem("/(privado)/campeonatos/categorias", "Categorías")}
+                  {navItem("/(privado)/campeonatos/grupos", "Grupos")}
+                  {navItem("/(privado)/campeonatos/lista", "Campeonatos")}
+                </div>
+              )}
+            </div>
+            {/* Usuarios */}
+            <div>
+              <button
+                onClick={() => toggleSection("usuarios")}
+                className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
+              >
+                <span>Usuarios</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-300 ${
+                    openSection === "usuarios" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {openSection === "usuarios" && (
+                <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
+                  {navItem("/(privado)/usuarios/delegados", "Delegados")}
+                  {navItem("/(privado)/usuarios/vocales", "Vocales")}
+                </div>
+              )}
+            </div>
+            {/* Actas */}
+            <div>
+              <button
+                onClick={() => toggleSection("actas")}
+                className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
+              >
+                <span>Actas</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-300 ${
+                    openSection === "actas" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {openSection === "actas" && (
+                <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
+                  {navItem("/(privado)/actas/verificar", "Verificación")}
+                  {navItem("/(privado)/actas/consultar", "Consulta")}
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
-        {/* Navegación */}
-        <nav className="flex-1 overflow-y-auto mt-4 space-y-1">
-          {navItem("/dashboard", "Dashboard")}
-
-          {/* Administración */}
+        {role === "delegado" && (
           <div>
             <button
-              onClick={() => toggleSection("admin")}
+              onClick={() => toggleSection("actas")}
               className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
             >
-              <span>Administración</span>
+              <span>Actas</span>
               <ChevronDown
                 size={16}
                 className={`transition-transform duration-300 ${
-                  openSection === "admin" ? "rotate-180" : ""
+                  openSection === "actas" ? "rotate-180" : ""
                 }`}
               />
             </button>
-            {openSection === "admin" && (
+            {openSection === "actas" && (
               <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
-                {navItem("/(privado)/canchas", "Canchas")}
-                {navItem("/(privado)/arbitros", "Árbitros")}
-                {navItem("/(privado)/equipos", "Equipos")}
+                {navItem("/(privado)/actas/verificar", "Verificación")}
+                {navItem("/(privado)/actas/consultar", "Consulta")}
               </div>
             )}
           </div>
+        )}
 
-          {/* Campeonato */}
-          <div>
-            <button
-              onClick={() => toggleSection("campeonato")}
-              className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
-            >
-              <span>Campeonato</span>
-              <ChevronDown
-                size={16}
-                className={`transition-transform duration-300 ${
-                  openSection === "campeonato" ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {openSection === "campeonato" && (
-              <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
-                {navItem("/(privado)/campeonato", "Campeonato")}
-                {navItem("/(privado)/categoria", "Categoría")}
-                {navItem("/(privado)/grupos", "Grupos")}
-              </div>
-            )}
-          </div>
+        {role === "publico" && (
+          <>
+            {navItem("/(publico)/home", "Inicio")}
+            {navItem("/(publico)/tabla-posiciones", "Tabla de posiciones")}
+            {navItem("/(publico)/partidos-recientes", "Últimos partidos")}
+          </>
+        )}
+      </nav>
 
-          {/* Usuarios */}
-          <div>
-            <button
-              onClick={() => toggleSection("usuarios")}
-              className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
-            >
-              <span>Usuarios</span>
-              <ChevronDown
-                size={16}
-                className={`transition-transform duration-300 ${
-                  openSection === "usuarios" ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {openSection === "usuarios" && (
-              <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
-                {navItem("/(privado)/vocales", "Vocales")}
-                {navItem("/(privado)/delegados", "Delegados")}
-              </div>
-            )}
-          </div>
-        </nav>
-
-        {/* Pie */}
-        <div className="p-4 text-xs text-gray-400 border-t">
-          © {new Date().getFullYear()} Liga Deportiva Picaíhua
-        </div>
-      </aside>
-
-      {/* Fondo oscuro cuando el menú está abierto en móvil */}
-      {isOpen && (
-        <div
-          onClick={toggleSidebar}
-          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden"
-        ></div>
-      )}
-    </>
+      <div className="p-4 text-xs text-gray-400 border-t text-center">
+        © {new Date().getFullYear()} Liga Deportiva Picaíhua
+      </div>
+    </aside>
   );
 }

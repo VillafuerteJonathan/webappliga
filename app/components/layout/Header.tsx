@@ -3,10 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import Logo from "@public/LogoLDP.jpg";
+import { Menu } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function Header() {
+interface HeaderProps {
+  onToggleSidebar: () => void; // 👈 viene desde el layout
+}
+
+export default function Header({ onToggleSidebar }: HeaderProps) {
   const [userName, setUserName] = useState<string | null>(null);
   const router = useRouter();
 
@@ -25,25 +30,38 @@ export default function Header() {
   return (
     <header className="w-full bg-gradient-to-r from-[#004C97] to-[#00923F] shadow-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
-        <div className="flex items-center gap-3">
-          <Image
-            src={Logo}
-            alt="Logo Liga Deportiva Picaíhua"
-            width={48}
-            height={48}
-            className="rounded-full bg-white p-1"
-          />
-          <div className="text-white">
-            <h1 className="text-lg font-bold leading-tight">
-              Liga Deportiva Parroquial
-            </h1>
-            <p className="text-sm font-medium tracking-wide text-[#F9C900]">
-              Picaíhua
-            </p>
+        {/* 🔹 Izquierda: Hamburguesa + Logo */}
+        <div className="flex items-center gap-4">
+          {/* Botón hamburguesa */}
+          <button
+            onClick={onToggleSidebar} // ✅ usamos el prop
+            className="p-2 rounded-md text-white hover:bg-white/10 transition"
+            aria-label="Abrir o cerrar menú lateral"
+          >
+            <Menu size={26} />
+          </button>
+
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <Image
+              src={Logo}
+              alt="Logo Liga Deportiva Picaíhua"
+              width={48}
+              height={48}
+              className="rounded-full bg-white p-1"
+            />
+            <div className="text-white">
+              <h1 className="text-lg font-bold leading-tight">
+                Liga Deportiva Parroquial
+              </h1>
+              <p className="text-sm font-medium tracking-wide text-[#F9C900]">
+                Picaíhua
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Cambia según login */}
+        {/* 🔹 Derecha: Usuario o Login */}
         {userName ? (
           <div className="flex items-center gap-4 text-white">
             <span className="font-medium">

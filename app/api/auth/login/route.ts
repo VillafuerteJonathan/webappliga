@@ -6,17 +6,18 @@ const SECRET_KEY = process.env.JWT_SECRET || "secret-key-demo";
 export async function POST(request: Request) {
   const { email, password } = await request.json();
 
-  // Simulación de credenciales válidas
-  if (email === "admin@liga.com" && password === "123456") {
-    const token = jwt.sign({ name: "Administrador", email }, SECRET_KEY, {
-      expiresIn: "1h",
-    });
+  // Simulación de usuarios
+  const users = [
+    { email: "admin@liga.com", password: "123456", name: "Administrador", role: "admin" },
+    { email: "delegado@liga.com", password: "123456", name: "Delegado", role: "delegado" },
+  ];
 
-    return NextResponse.json({ token, name: "Administrador" }, { status: 200 });
+  const user = users.find((u) => u.email === email && u.password === password);
+
+  if (!user) {
+    return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
   }
 
-  return NextResponse.json(
-    { error: "Credenciales incorrectas" },
-    { status: 401 }
-  );
+  const token = jwt.sign(user, SECRET_KEY, { expiresIn: "1h" });
+  return NextResponse.json({ token, ...user }, { status: 200 });
 }
