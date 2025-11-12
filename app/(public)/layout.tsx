@@ -30,7 +30,6 @@ export default function PuolicLayout({
         {/* ✅ Aquí ya funciona correctamente */}
         <Header onToggleSidebar={handleToggleSidebar} />
         <main className="p-6">
-          <h1 className="text-2xl font-bold text-gray-800">Hola</h1>
           {children}
         </main>
       </div>
