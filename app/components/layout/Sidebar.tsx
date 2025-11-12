@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import {jwtDecode} from "jwt-decode"; // ✅ import default
+import { jwtDecode } from "jwt-decode"; // ✅ Import correcto
 
 interface SidebarProps {
   isOpen: boolean;
@@ -25,30 +25,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) {
+    const decodeRole = (t: string | null) => {
+      if (!t) return "publico";
       try {
-        const decoded: DecodedToken = jwtDecode(token); // ✅ aquí usamos jwtDecode
-        setRole(decoded.role);
-      } catch (err) {
-        console.error("Token inválido");
-        setRole("publico");
+        const decoded: DecodedToken = jwtDecode(t);
+        return decoded.role || "publico";
+      } catch {
+        return "publico";
       }
-    } else {
-      setRole("publico");
-    }
+    };
+
+    setRole(decodeRole(token));
 
     const handleStorageChange = () => {
-      const t = localStorage.getItem("token");
-      if (t) {
-        try {
-          const decoded: DecodedToken = jwtDecode(t);
-          setRole(decoded.role);
-        } catch {
-          setRole("publico");
-        }
-      } else {
-        setRole("publico");
-      }
+      const newToken = localStorage.getItem("token");
+      setRole(decodeRole(newToken));
     };
 
     window.addEventListener("storage", handleStorageChange);
@@ -61,6 +52,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   const navItem = (href: string, label: string) => (
     <Link
+      key={href}
       href={href}
       onClick={onClose}
       className={`block px-6 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -79,14 +71,18 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         isOpen ? "translate-x-0" : "-translate-x-64"
       }`}
     >
+      {/* Encabezado */}
       <div className="px-6 py-4 bg-gradient-to-r from-[#004C97] to-[#00923F] text-white font-bold text-lg shadow">
         Panel LDP
       </div>
 
+      {/* Navegación */}
       <nav className="flex-1 overflow-y-auto mt-4 space-y-1">
+        {/* ADMIN */}
         {role === "admin" && (
           <>
             {navItem("/dashboard", "Dashboard")}
+
             {/* Gestión */}
             <div>
               <button
@@ -104,11 +100,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               {openSection === "gestion" && (
                 <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
                   {navItem("/gestion/canchas", "Canchas")}
-                  {navItem("/(privado)/gestion/arbitros", "Árbitros")}
-                  {navItem("/(privado)/gestion/equipos", "Equipos")}
+                  {navItem("/gestion/arbitros", "Árbitros")}
+                  {navItem("/gestion/equipos", "Equipos")}
                 </div>
               )}
             </div>
+
             {/* Campeonatos */}
             <div>
               <button
@@ -125,12 +122,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </button>
               {openSection === "campeonatos" && (
                 <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
-                  {navItem("/(privado)/campeonatos/categorias", "Categorías")}
-                  {navItem("/(privado)/campeonatos/grupos", "Grupos")}
-                  {navItem("/(privado)/campeonatos/lista", "Campeonatos")}
+                  {navItem("/campeonatos/categorias", "Categorías")}
+                  {navItem("/campeonatos/grupos", "Grupos")}
+                  {navItem("/campeonatos/lista", "Campeonatos")}
                 </div>
               )}
             </div>
+
             {/* Usuarios */}
             <div>
               <button
@@ -147,11 +145,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </button>
               {openSection === "usuarios" && (
                 <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
-                  {navItem("/(privado)/usuarios/delegados", "Delegados")}
-                  {navItem("/(privado)/usuarios/vocales", "Vocales")}
+                  {navItem("/usuarios/delegados", "Delegados")}
+                  {navItem("/usuarios/vocales", "Vocales")}
                 </div>
               )}
             </div>
+
             {/* Actas */}
             <div>
               <button
@@ -168,37 +167,42 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               </button>
               {openSection === "actas" && (
                 <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
-                  {navItem("/(privado)/actas/verificar", "Verificación")}
-                  {navItem("/(privado)/actas/consultar", "Consulta")}
+                  {navItem("/actas/verificacion", "Verificación")}
+                  {navItem("/actas/consulta", "Consulta")}
                 </div>
               )}
             </div>
           </>
         )}
 
+        {/* DELEGADO */}
         {role === "delegado" && (
-          <div>
-            <button
-              onClick={() => toggleSection("actas")}
-              className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
-            >
-              <span>Actas</span>
-              <ChevronDown
-                size={16}
-                className={`transition-transform duration-300 ${
-                  openSection === "actas" ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-            {openSection === "actas" && (
-              <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
-                {navItem("/(privado)/actas/verificar", "Verificación")}
-                {navItem("/(privado)/actas/consultar", "Consulta")}
-              </div>
-            )}
-          </div>
+          <>
+            {navItem("/dashboard", "Dashboard")}
+            <div>
+              <button
+                onClick={() => toggleSection("actas")}
+                className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
+              >
+                <span>Actas</span>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-300 ${
+                    openSection === "actas" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {openSection === "actas" && (
+                <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
+                  {navItem("/actas/verificacion", "Verificación")}
+                  {navItem("/actas/consulta", "Consulta")}
+                </div>
+              )}
+            </div>
+          </>
         )}
 
+        {/* PÚBLICO */}
         {role === "publico" && (
           <>
             {navItem("/dashboard", "Inicio")}
@@ -208,6 +212,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       </nav>
 
+      {/* Footer */}
       <div className="p-4 text-xs text-gray-400 border-t text-center">
         © {new Date().getFullYear()} Liga Deportiva Picaíhua
       </div>
