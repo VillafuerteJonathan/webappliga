@@ -36,53 +36,77 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
 
-app/
-├── (auth)/                          # 🔒 Rutas de autenticación
-│   ├── login/
-│   │   └── page.tsx                 # Página de inicio de sesión
-│   └── register/
-│       └── page.tsx                 # (Opcional) Registro de usuario
+    app/
+    ├── (auth)/                          # 🔒 Rutas de autenticación
+    │   ├── login/
+    │   │   └── page.tsx                 # Página de inicio de sesión
+    │   └── register/
+    │       └── page.tsx                 # (Opcional) Registro de usuario
 
-├── (privado)/                       # 🔐 Área interna / protegida
-│   ├── dashboard/
-│   │   └── page.tsx                 # Ejemplo: panel principal
-│   ├── usuarios/
-│   │   └── page.tsx                 # Gestión de usuarios
-│   └── layout.tsx                   # Layout común para área privada
+    (private)/                      # 🔐 Área interna / protegida
+    │
+    ├── dashboard/
+    │   └── page.tsx                # Panel principal (ejemplo)
+    │
+    ├── campeonatos/
+    │   ├── categorias/
+    │   │   └── page.tsx
+    │   ├── grupos/
+    │   │   └── page.tsx
+    │   └── lista/
+    │       └── page.tsx
+    │
+    ├── gestion/
+    │   ├── arbitros/
+    │   │   └── page.tsx
+    │   ├── canchas/
+    │   │   └── page.tsx
+    │   └── equipos/
+    │       └── page.tsx
+    │
+    ├── usuarios/
+    │   ├── vocales/
+    │   │   └── page.tsx
+    │   └── delegados/
+    │       └── page.tsx
+    │
+    └── layout.tsx                  # Layout común para el área privada
 
-├── (publico)/                       # 🌍 Área pública
-│   ├── home/
-│   │   └── page.tsx                 # Página de inicio
-│   ├── about/
-│   │   └── page.tsx                 # Página "Acerca de"
-│   └── layout.tsx                   # Layout común para páginas públicas
 
-├── api/                             # ⚙️ Endpoints tipo REST
-│   ├── auth/
-│   │   └── route.ts                 # Ejemplo: POST /api/auth
-│   ├── users/
-│   │   └── route.ts                 # Ejemplo: GET /api/users
-│   └── route.ts                     # Ejemplo: /api root
 
-├── components/                      # 🧩 Componentes reutilizables
-│   ├── layout/
-│   │   ├── Header.tsx               # Encabezado principal
-│   │   ├── Footer.tsx               # Pie de página
-│   │   └── Layout.tsx               # Layout general
-│   ├── ui/
-│   │   └── Button.tsx               # Ejemplo de componente UI
-│   └── forms/
-│       └── LoginForm.tsx            # Formulario de login
+    ├── (publico)/                       # 🌍 Área pública
+    │   ├── home/
+    │   │   └── page.tsx                 # Página de inicio
+    │   ├── about/
+    │   │   └── page.tsx                 # Página "Acerca de"
+    │   └── layout.tsx                   # Layout común para páginas públicas
 
-├── globals.css                      # 🎨 Estilos globales
-├── layout.tsx                       # Layout raíz del proyecto
-└── page.tsx                         # Redirección o landing principal
+    ├── api/                             # ⚙️ Endpoints tipo REST
+    │   ├── auth/
+    │   │   └── route.ts                 # Ejemplo: POST /api/auth
+    │   ├── users/
+    │   │   └── route.ts                 # Ejemplo: GET /api/users
+    │   └── route.ts                     # Ejemplo: /api root
 
-#004C97  (Azul institucional)
-#00923F  (Verde institucional)
-#3FA9F5  (Azul celeste)
-#57B947  (Verde claro)
-#F9C900  (Amarillo dorado)
-#FFFFFF  (Blanco)
-#1A1A1A  (Negro)
-    
+    ├── components/                      # 🧩 Componentes reutilizables
+    │   ├── layout/
+    │   │   ├── Header.tsx               # Encabezado principal
+    │   │   ├── Footer.tsx               # Pie de página
+    │   │   └── Layout.tsx               # Layout general
+    │   ├── ui/
+    │   │   └── Button.tsx               # Ejemplo de componente UI
+    │   └── forms/
+    │       └── LoginForm.tsx            # Formulario de login
+
+    ├── globals.css                      # 🎨 Estilos globales
+    ├── layout.tsx                       # Layout raíz del proyecto
+    └── page.tsx                         # Redirección o landing principal
+
+    #004C97  (Azul institucional)
+    #00923F  (Verde institucional)
+    #3FA9F5  (Azul celeste)
+    #57B947  (Verde claro)
+    #F9C900  (Amarillo dorado)
+    #FFFFFF  (Blanco)
+    #1A1A1A  (Negro)
+        
