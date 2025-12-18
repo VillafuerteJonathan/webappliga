@@ -4,4 +4,6 @@ export interface Cancha {
   tipo_deporte: string;
   ubicacion?: string;
   estado: boolean;
+  eliminado: boolean;
 }
+
