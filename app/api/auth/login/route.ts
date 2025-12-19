@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
-import jwt from "jsonwebtoken";
-
-const SECRET_KEY = process.env.JWT_SECRET || "secret-key-demo";
 
 export async function POST(request: Request) {
-  const { email, password } = await request.json();
+  try {
+    const body = await request.json();
 
-  // Simulación de usuarios
-  const users = [
-    { email: "admin@liga.com", password: "123456", name: "Administrador", role: "admin" },
-    { email: "delegado@liga.com", password: "123456", name: "Delegado", role: "delegado" },
-  ];
+    // Llamada al backend real
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body), // { cedula, password }
+    });
 
-  const user = users.find((u) => u.email === email && u.password === password);
+    const data = await res.json();
 
-  if (!user) {
-    return NextResponse.json({ error: "Credenciales incorrectas" }, { status: 401 });
+    if (!res.ok) {
+      return NextResponse.json({ error: data.message || "Credenciales incorrectas" }, { status: res.status });
+    }
+
+    return NextResponse.json(data, { status: 200 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Error de servidor" }, { status: 500 });
   }
-
-  const token = jwt.sign(user, SECRET_KEY, { expiresIn: "1h" });
-  return NextResponse.json({ token, ...user }, { status: 200 });
 }

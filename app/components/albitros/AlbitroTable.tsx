@@ -19,7 +19,7 @@ export default function ArbitroTable({
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<string>("todos");
-  const [itemsPorPagina, setItemsPorPagina] = useState<number>(10);
+  const [itemsPorPagina, setItemsPorPagina] = useState<number>(5);
 
   // Filtrar árbitros no eliminados
   const arbitrosActivos = useMemo(() => 

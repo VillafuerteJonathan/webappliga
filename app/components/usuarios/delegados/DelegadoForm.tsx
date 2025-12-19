@@ -1,22 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArbitrosService } from "@/services/arbitros.service";
-import { Arbitro } from "@/types/arbitro";
+import { DelegadosService } from "@/services/delegados.service";
+import { Delegado} from "@/types/delegado";
 
 interface Props {
-  arbitro?: Arbitro;
+  delegado?: Delegado;
   onSuccess: () => void;
 }
 
-export default function ArbitroForm({ arbitro, onSuccess }: Props) {
+export default function DelegadoForm({ delegado, onSuccess }: Props) {
   const [form, setForm] = useState({
-    nombres: "",
-    apellidos: "",
+    nombre: "",
+    apellido: "",
     cedula: "",
     telefono: "",
     correo: "",
-    direccion: ""
+    estado: true // ✅ ACTIVO POR DEFECTO
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -26,27 +26,27 @@ export default function ArbitroForm({ arbitro, onSuccess }: Props) {
   // CARGAR DATOS PARA EDICIÓN
   // =============================
   useEffect(() => {
-    if (arbitro) {
+    if (delegado) {
       setForm({
-        nombres: arbitro.nombres ?? "",
-        apellidos: arbitro.apellidos ?? "",
-        cedula: arbitro.cedula ?? "",
-        telefono: arbitro.telefono ?? "",
-        correo: arbitro.correo ?? "",
-        direccion: arbitro.direccion ?? ""
+        nombre: delegado.nombre || "",
+        apellido: delegado.apellido || "",
+        cedula: delegado.cedula || "",
+        telefono: delegado.telefono || "",
+        correo: delegado.correo || "",
+        estado: delegado.estado ?? true
       });
     } else {
       setForm({
-        nombres: "",
-        apellidos: "",
+        nombre: "",
+        apellido: "",
         cedula: "",
         telefono: "",
         correo: "",
-        direccion: ""
+        estado: true
       });
     }
     setErrors({});
-  }, [arbitro]);
+  }, [delegado]);
 
   // =============================
   // VALIDACIONES
@@ -54,21 +54,21 @@ export default function ArbitroForm({ arbitro, onSuccess }: Props) {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!form.nombres.trim()) newErrors.nombres = "Los nombres son obligatorios";
-    if (!form.apellidos.trim()) newErrors.apellidos = "Los apellidos son obligatorios";
+    if (!form.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
+    if (!form.apellido.trim()) newErrors.apellido = "El apellido es obligatorio";
     if (!form.cedula.trim()) newErrors.cedula = "La cédula es obligatoria";
-    if (!form.direccion.trim()) newErrors.direccion = "La dirección es obligatoria";
+    
 
     if (form.cedula && !/^\d{10}$/.test(form.cedula)) {
       newErrors.cedula = "La cédula debe tener 10 dígitos";
     }
 
-    if (form.telefono && !/^\d{10}$/.test(form.telefono)) {
-      newErrors.telefono = "El teléfono debe tener 10 dígitos";
-    }
-
     if (form.correo && !/\S+@\S+\.\S+/.test(form.correo)) {
       newErrors.correo = "Correo electrónico inválido";
+    }
+
+    if (form.telefono && !/^\d{10}$/.test(form.telefono)) {
+      newErrors.telefono = "El teléfono debe tener 10 dígitos";
     }
 
     setErrors(newErrors);
@@ -80,38 +80,39 @@ export default function ArbitroForm({ arbitro, onSuccess }: Props) {
   // =============================
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+
     if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
-      const result = arbitro?.id_arbitro
-        ? await ArbitrosService.editar(arbitro.id_arbitro, form)
-        : await ArbitrosService.crear(form);
+      let result;
 
-      // 🟡 MANEJO DE ERRORES SEGURO
+      if (delegado?.id_usuario) {
+        result = await DelegadosService.editarDelegado(delegado.id_usuario, form);
+      } else {
+        result = await DelegadosService.crearDelegado(form);
+      }
+
       if (!result.success) {
-        const message = result?.message || "Error al guardar árbitro";
-
-        if (message.toLowerCase().includes("cedula")) {
-          setErrors(prev => ({ ...prev, cedula: message }));
+        if (result.message.includes("cedula")) {
+          setErrors(prev => ({ ...prev, cedula: result.message }));
         } else {
-          setErrors(prev => ({ ...prev, general: message }));
+          setErrors(prev => ({ ...prev, general: result.message }));
         }
         return;
       }
 
-      // ✅ ÉXITO
       onSuccess();
 
-      if (!arbitro) {
+      if (!delegado) {
         setForm({
-          nombres: "",
-          apellidos: "",
+          nombre: "",
+          apellido: "",
           cedula: "",
           telefono: "",
           correo: "",
-          direccion: ""
+          estado: true
         });
       }
 
@@ -131,36 +132,56 @@ export default function ArbitroForm({ arbitro, onSuccess }: Props) {
   // =============================
   return (
     <form onSubmit={submit} className="space-y-6">
+      <h2 className="text-xl font-semibold text-gray-800">
+        {delegado ? "Editar Delegado" : "Nuevo Delegado"}
+      </h2>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input label="Nombres *" value={form.nombres} error={errors.nombres}
-          onChange={v => setForm({ ...form, nombres: v })} />
+        <Input
+          label="Nombres *"
+          value={form.nombre}
+          error={errors.nombre}
+          onChange={v => setForm({ ...form, nombre: v })}
+        />
 
-        <Input label="Apellidos *" value={form.apellidos} error={errors.apellidos}
-          onChange={v => setForm({ ...form, apellidos: v })} />
+        <Input
+          label="Apellidos *"
+          value={form.apellido}
+          error={errors.apellido}
+          onChange={v => setForm({ ...form, apellido: v })}
+        />
 
-        <Input label="Cédula *" value={form.cedula} error={errors.cedula}
-          onChange={v => setForm({ ...form, cedula: v.replace(/\D/g, "").slice(0, 10) })} />
+        <Input
+          label="Cédula *"
+          value={form.cedula}
+          error={errors.cedula}
+          onChange={v => setForm({ ...form, cedula: v.replace(/\D/g, "").slice(0, 10) })}
+        />
 
-        <Input label="Teléfono" value={form.telefono} error={errors.telefono}
-          onChange={v => setForm({ ...form, telefono: v.replace(/\D/g, "").slice(0, 10) })} />
+        <Input
+          label="Teléfono"
+          value={form.telefono}
+          error={errors.telefono}
+          onChange={v => setForm({ ...form, telefono: v.replace(/\D/g, "").slice(0, 10) })}
+        />
 
-        <Input label="Correo" value={form.correo} error={errors.correo}
-          onChange={v => setForm({ ...form, correo: v })} />
+        <Input
+          label="Correo"
+          value={form.correo}
+          error={errors.correo}
+          onChange={v => setForm({ ...form, correo: v })}
+        />
 
-        <Input label="Dirección *" value={form.direccion} error={errors.direccion}
-          onChange={v => setForm({ ...form, direccion: v })} full />
       </div>
 
-      {errors.general && (
-        <p className="text-sm text-red-600">{errors.general}</p>
-      )}
+      {errors.general && <p className="text-sm text-red-600">{errors.general}</p>}
 
       <button
         type="submit"
         disabled={isLoading}
         className="w-full bg-[#00923F] hover:bg-[#007A34] text-white py-3 rounded-lg disabled:opacity-70"
       >
-        {isLoading ? "Guardando..." : arbitro ? "Actualizar Árbitro" : "Crear Árbitro"}
+        {isLoading ? "Guardando..." : delegado ? "Actualizar Delegado" : "Crear Delegado"}
       </button>
     </form>
   );
@@ -188,7 +209,7 @@ function Input({
       <input
         value={value}
         onChange={e => onChange(e.target.value)}
-        className={`w-full px-4 py-2 border rounded-lg ${
+        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 ${
           error ? "border-red-300" : "border-gray-300"
         }`}
       />

@@ -5,16 +5,15 @@ import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode"; // ✅ Import correcto
-
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 interface DecodedToken {
-  name: string;
-  email: string;
-  role: string;
+  id_usuario: string;
+  rol: string;
+  iat: number;
   exp: number;
 }
 
@@ -24,19 +23,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const [role, setRole] = useState<string>("publico");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const decodeRole = (t: string | null) => {
-      if (!t) return "publico";
+    const decodeRole = (token: string | null) => {
+      if (!token) return "publico";
       try {
-        const decoded: DecodedToken = jwtDecode(t);
-        return decoded.role || "publico";
+        const decoded: DecodedToken = jwtDecode(token);
+        return decoded.rol || "publico";
       } catch {
         return "publico";
       }
     };
 
+    // Al cargar, lee el token actual
+    const token = localStorage.getItem("token");
     setRole(decodeRole(token));
 
+    // Escucha cambios en localStorage (logout/login en otra pestaña)
     const handleStorageChange = () => {
       const newToken = localStorage.getItem("token");
       setRole(decodeRole(newToken));
