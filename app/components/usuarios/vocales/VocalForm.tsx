@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { DelegadosService } from "@/services/delegados.service";
-import { Delegado} from "@/types/delegado";
+import { VocalesService } from "@/services/vocales.service";
+import { Vocal} from "@/types/vocales";
 
 interface Props {
-  delegado?: Delegado;
+  vocal?: Vocal;
   onSuccess: () => void;
 }
 
-export default function DelegadoForm({ delegado, onSuccess }: Props) {
+export default function VocalForm({ vocal, onSuccess }: Props) {
   const [form, setForm] = useState({
     nombre: "",
     apellido: "",
@@ -26,14 +26,14 @@ export default function DelegadoForm({ delegado, onSuccess }: Props) {
   // CARGAR DATOS PARA EDICIÓN
   // =============================
   useEffect(() => {
-    if (delegado) {
+    if (vocal) {
       setForm({
-        nombre: delegado.nombre || "",
-        apellido: delegado.apellido || "",
-        cedula: delegado.cedula || "",
-        telefono: delegado.telefono || "",
-        correo: delegado.correo || "",
-        estado: delegado.estado ?? true
+        nombre: vocal.nombre || "",
+        apellido: vocal.apellido || "",
+        cedula: vocal.cedula || "",
+        telefono: vocal.telefono || "",
+        correo: vocal.correo || "",
+        estado: vocal.estado ?? true
       });
     } else {
       setForm({
@@ -46,7 +46,7 @@ export default function DelegadoForm({ delegado, onSuccess }: Props) {
       });
     }
     setErrors({});
-  }, [delegado]);
+  }, [vocal]);
 
   // =============================
   // VALIDACIONES
@@ -88,10 +88,10 @@ export default function DelegadoForm({ delegado, onSuccess }: Props) {
     try {
       let result;
 
-      if (delegado?.id_usuario) {
-        result = await DelegadosService.editarDelegado(delegado.id_usuario, form);
+      if (vocal?.id_usuario) {
+        result = await VocalesService.editarVocal(vocal.id_usuario, form);
       } else {
-        result = await DelegadosService.crearDelegado(form);
+        result = await VocalesService.crearVocal(form);
       }
 
       if (!result.success) {
@@ -105,7 +105,7 @@ export default function DelegadoForm({ delegado, onSuccess }: Props) {
 
       onSuccess();
 
-      if (!delegado) {
+      if (!vocal) {
         setForm({
           nombre: "",
           apellido: "",
@@ -132,7 +132,7 @@ export default function DelegadoForm({ delegado, onSuccess }: Props) {
   // =============================
   return (
     <form onSubmit={submit} className="space-y-6">
-    
+      
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Input
@@ -179,7 +179,7 @@ export default function DelegadoForm({ delegado, onSuccess }: Props) {
         disabled={isLoading}
         className="w-full bg-[#00923F] hover:bg-[#007A34] text-white py-3 rounded-lg disabled:opacity-70"
       >
-        {isLoading ? "Guardando..." : delegado ? "Actualizar Delegado" : "Crear Delegado"}
+        {isLoading ? "Guardando..." : vocal ? "Actualizar Vocal" : "Crear Vocal"}
       </button>
     </form>
   );
