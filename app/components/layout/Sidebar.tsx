@@ -113,7 +113,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 onClick={() => toggleSection("campeonatos")}
                 className="w-full flex items-center justify-between px-6 py-2 text-gray-700 hover:bg-blue-50 font-semibold text-sm"
               >
-                <span>Campeonatos</span>
+                <span>Torneo</span>
                 <ChevronDown
                   size={16}
                   className={`transition-transform duration-300 ${
