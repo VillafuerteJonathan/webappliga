@@ -125,7 +125,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                 <div className="ml-6 border-l border-gray-200 pl-4 space-y-1">
                   {navItem("/campeonatos/categorias", "Categorías")}
                   {navItem("/campeonatos/grupos", "Grupos")}
-                  {navItem("/campeonatos/lista", "Campeonatos")}
+                  {navItem("/campeonatos/torneos", "Campeonatos")}
                 </div>
               )}
             </div>

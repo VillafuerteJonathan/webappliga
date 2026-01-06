@@ -15,7 +15,8 @@ import {
   Check,
   X,
   AlertCircle,
-  Calendar
+  Calendar,
+  ChevronDown
 } from "lucide-react";
 
 interface CategoriaTableProps {
@@ -33,8 +34,14 @@ export default function CategoriaTable({
   const [paginaActual, setPaginaActual] = useState(1);
   const [busqueda, setBusqueda] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("todos");
-  const [itemsPorPagina, setItemsPorPagina] = useState(10);
+  const [itemsPorPagina, setItemsPorPagina] = useState(5);
   const [mostrarDescripcion, setMostrarDescripcion] = useState<string | null>(null);
+  
+  // Modal de confirmación
+  const [modal, setModal] = useState<{
+    tipo: "eliminar" | "estado" | null;
+    categoria: Categoria | null;
+  }>({ tipo: null, categoria: null });
 
   /** Formatear fecha de forma segura */
   const formatFecha = (fechaString: string | undefined | Date): string => {
@@ -97,43 +104,39 @@ export default function CategoriaTable({
     }
   }, [busqueda, filtroEstado, itemsPorPagina, totalPaginas, paginaActual]);
 
-  /** Acciones */
-  const toggleEstado = async (categoria: Categoria) => {
-    const confirmacion = window.confirm(
-      `¿${categoria.estado ? "Deshabilitar" : "Habilitar"} la categoría "${categoria.nombre}"?`
-    );
-    
-    if (!confirmacion) return;
+  /** Abrir modal */
+  const abrirModal = (tipo: "eliminar" | "estado", categoria: Categoria) => 
+    setModal({ tipo, categoria });
 
+  /** Cerrar modal */
+  const cerrarModal = () => setModal({ tipo: null, categoria: null });
+
+  /** Confirmar acción */
+  const confirmarModal = async () => {
+    if (!modal.categoria) return;
+    
     try {
-      if (categoria.estado) {
-        await CategoriasService.deshabilitar(categoria.id_categoria);
-      } else {
-        await CategoriasService.habilitar(categoria.id_categoria);
+      if (modal.tipo === "eliminar") {
+        setEliminando(modal.categoria.id_categoria);
+        await CategoriasService.eliminar(modal.categoria.id_categoria);
+      } else if (modal.tipo === "estado") {
+        if (modal.categoria.estado) {
+          await CategoriasService.deshabilitar(modal.categoria.id_categoria);
+        } else {
+          await CategoriasService.habilitar(modal.categoria.id_categoria);
+        }
       }
       recargar();
-    } catch (e) {
-      console.error("Error al cambiar estado:", e);
-      alert("Error al cambiar el estado de la categoría");
-    }
-  };
-
-  const handleEliminar = async (categoria: Categoria) => {
-    if (!confirm(`¿Está seguro de eliminar la categoría "${categoria.nombre}"?\nEsta acción no se puede deshacer.`)) return;
-
-    setEliminando(categoria.id_categoria);
-    try {
-      await CategoriasService.eliminar(categoria.id_categoria);
-      recargar();
     } catch (error) {
-      alert("Error al eliminar la categoría");
+      alert("Error al realizar la acción");
     } finally {
       setEliminando(null);
+      cerrarModal();
     }
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden relative">
       {/* Header con filtros */}
       <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
@@ -150,6 +153,7 @@ export default function CategoriaTable({
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Búsqueda */}
             <div className="relative flex-1 md:max-w-xs">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
@@ -167,68 +171,49 @@ export default function CategoriaTable({
                 </button>
               )}
             </div>
+            
+            {/* Filtro de estado - CORREGIDO */}
+            <div className="relative">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <Filter className="h-4 w-4 text-gray-500" />
+              </div>
+              <select
+                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                value={filtroEstado}
+                onChange={e => {
+                  setFiltroEstado(e.target.value);
+                  setPaginaActual(1);
+                }}
+              >
+                <option value="todos">Todas</option>
+                <option value="activas">Solo activas</option>
+                <option value="inactivas">Solo inactivas</option>
+              </select>
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Filtros */}
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Filtros:</span>
-          </div>
-          
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setFiltroEstado("todos")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filtroEstado === "todos" 
-                  ? "bg-blue-600 text-white shadow-sm" 
-                  : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400 hover:shadow"
-              }`}
-            >
-              Todas
-            </button>
-            <button
-              onClick={() => setFiltroEstado("activas")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filtroEstado === "activas" 
-                  ? "bg-green-600 text-white shadow-sm" 
-                  : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400 hover:shadow"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Check className="h-4 w-4" />
-                Activas
-              </div>
-            </button>
-            <button
-              onClick={() => setFiltroEstado("inactivas")}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                filtroEstado === "inactivas" 
-                  ? "bg-red-600 text-white shadow-sm" 
-                  : "bg-white text-gray-700 border border-gray-300 hover:border-gray-400 hover:shadow"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <X className="h-4 w-4" />
-                Inactivas
-              </div>
-            </button>
-          </div>
-
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-sm text-gray-600">Mostrar:</span>
+        {/* Items por página */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-gray-600">Mostrar:</span>
             <select
               value={itemsPorPagina}
-              onChange={e => setItemsPorPagina(Number(e.target.value))}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              onChange={e => {
+                setItemsPorPagina(Number(e.target.value));
+                setPaginaActual(1);
+              }}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={20}>20</option>
               <option value={50}>50</option>
             </select>
-            <span className="text-sm text-gray-600">por página</span>
+            <span className="text-gray-600">por página</span>
           </div>
         </div>
       </div>
@@ -370,7 +355,7 @@ export default function CategoriaTable({
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => toggleEstado(categoria)}
+                        onClick={() => abrirModal("estado", categoria)}
                         className={`px-3 py-1.5 text-sm font-medium rounded-lg transition flex items-center gap-2 ${
                           categoria.estado
                             ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 hover:shadow-sm'
@@ -403,7 +388,7 @@ export default function CategoriaTable({
                       )}
 
                       <button
-                        onClick={() => handleEliminar(categoria)}
+                        onClick={() => abrirModal("eliminar", categoria)}
                         disabled={eliminando === categoria.id_categoria}
                         className="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition flex items-center gap-2 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -490,6 +475,81 @@ export default function CategoriaTable({
             >
               <ChevronRight className="h-4 w-4" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación - CORREGIDO */}
+      {modal.tipo && modal.categoria && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all animate-in fade-in zoom-in-95">
+            <div className="p-6">
+              <div className="flex items-start mb-4">
+                <div className={`p-3 rounded-lg ${modal.tipo === "eliminar" ? 'bg-red-100' : 'bg-blue-100'} mr-3`}>
+                  {modal.tipo === "eliminar" ? (
+                    <Trash2 className="h-6 w-6 text-red-600" />
+                  ) : (
+                    modal.categoria.estado ? (
+                      <X className="h-6 w-6 text-red-600" />
+                    ) : (
+                      <Check className="h-6 w-6 text-green-600" />
+                    )
+                  )}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {modal.tipo === "eliminar" ? "Eliminar categoría" : "Cambiar estado"}
+                  </h2>
+                  <p className="text-gray-600 mt-1 text-sm">
+                    Confirmar acción para: <span className="font-semibold">{modal.categoria.nombre}</span>
+                  </p>
+                </div>
+              </div>
+
+              <p className="mb-6 text-gray-700">
+                {modal.tipo === "eliminar"
+                  ? `¿Está seguro de eliminar permanentemente la categoría "${modal.categoria.nombre}"? Esta acción no se puede deshacer y se perderán todos los datos asociados.`
+                  : `¿Desea ${modal.categoria.estado ? "deshabilitar" : "habilitar"} la categoría "${modal.categoria.nombre}"? ${
+                      modal.categoria.estado 
+                        ? "Los usuarios no podrán acceder temporalmente."
+                        : "Los usuarios podrán acceder nuevamente."
+                    }`}
+              </p>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={cerrarModal}
+                  className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  disabled={eliminando === modal.categoria.id_categoria}
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={confirmarModal}
+                  disabled={eliminando === modal.categoria.id_categoria}
+                  className={`px-5 py-2.5 rounded-lg text-white font-medium transition-colors ${
+                    modal.tipo === "eliminar"
+                      ? 'bg-red-600 hover:bg-red-700 disabled:bg-red-400'
+                      : modal.categoria.estado
+                      ? 'bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400'
+                      : 'bg-green-600 hover:bg-green-700 disabled:bg-green-400'
+                  }`}
+                >
+                  {eliminando === modal.categoria.id_categoria ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Procesando...
+                    </div>
+                  ) : modal.tipo === "eliminar" ? (
+                    "Eliminar permanentemente"
+                  ) : modal.categoria.estado ? (
+                    "Deshabilitar"
+                  ) : (
+                    "Habilitar"
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

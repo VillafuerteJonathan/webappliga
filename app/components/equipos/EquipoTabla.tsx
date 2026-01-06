@@ -302,9 +302,9 @@ export default function EquipoTable({
                         <div className="text-sm font-medium text-gray-900">
                           {e.nombre || "-"}
                         </div>
-                        {e.descripcion && (
+                       
                           <div className="text-xs text-gray-500 truncate max-w-xs">{getNombreCategoria(e.categoria_id)}</div>
-                        )}
+                        
                       </div>
                     </div>
                   </td>
