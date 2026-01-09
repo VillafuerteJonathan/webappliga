@@ -16,6 +16,7 @@ export interface Campeonato {
   fecha_actualizacion?: string;
   fecha_eliminacion?: string | null;
   grupos: GrupoConEquipos[];
+  partidos_generados: boolean;
 }
 
 

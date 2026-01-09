@@ -9,4 +9,5 @@ export interface Equipo {
   estado: boolean;
   eliminado?: boolean;
   fecha_registro?: string;
+  cancha_id?: string;
 }

@@ -127,43 +127,60 @@ export const CampeonatosService = {
   // ==============================
   // ACTUALIZAR CAMPEONATO
   // ==============================
-  async actualizar(id: string, campeonatoData: ActualizarCampeonatoDTO): Promise<Campeonato | null> {
-    try {
-      console.log(`Enviando datos para actualizar campeonato ${id}:`, JSON.stringify(campeonatoData, null, 2));
-      
-      const res = await apiFetch<ApiResponse<Campeonato>>(`/campeonatos/${id}`, {
+  // ==============================
+// ACTUALIZAR CAMPEONATO
+// ==============================
+async actualizar(
+  id: string,
+  campeonatoData: ActualizarCampeonatoDTO
+): Promise<Campeonato | null> {
+  try {
+    console.log(
+      `Enviando datos para actualizar campeonato ${id}:`,
+      JSON.stringify(campeonatoData, null, 2)
+    );
+
+    const res = await apiFetch<ApiResponse<Campeonato>>(
+      `/campeonatos/${id}`,
+      {
         method: "PUT",
         body: JSON.stringify(campeonatoData),
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Accept": "application/json"
         }
-      });
-      
-      console.log(`Respuesta actualizar campeonato ${id}:`, res);
-      
-      if (!res?.success) {
-        console.error(`Error al actualizar campeonato ${id}:`, res?.error || "Error desconocido");
-        throw new Error(res?.error || `Error al actualizar campeonato ${id}`);
       }
-      
-      const campeonatoActualizado = res.data;
-      
-      if (campeonatoActualizado) {
-        console.log("Campeonato actualizado exitosamente:", {
-          id: campeonatoActualizado.id_campeonato,
-          nombre: campeonatoActualizado.nombre,
-          grupos: campeonatoActualizado.grupos?.length || 0
-        });
-      }
-      
-      return campeonatoActualizado || null;
-    } catch (err: any) {
-      console.error(`Error en actualizar(${id}):`, err);
-      throw err;
-    }
-  },
+    );
 
+    console.log(`Respuesta actualizar campeonato ${id}:`, res);
+
+    // 🔐 Manejo correcto de errores del backend
+    if (!res?.success) {
+      const mensaje =
+        res?.error ||
+        (res?.errors && res.errors.join(", ")) ||
+        `Error al actualizar campeonato ${id}`;
+
+      throw new Error(mensaje);
+    }
+
+    const campeonatoActualizado = res.data || null;
+
+    if (campeonatoActualizado) {
+      console.log("Campeonato actualizado exitosamente:", {
+        id: campeonatoActualizado.id_campeonato,
+        nombre: campeonatoActualizado.nombre,
+        grupos: campeonatoActualizado.grupos?.length || 0
+      });
+    }
+
+    return campeonatoActualizado;
+
+  } catch (err: any) {
+    console.error(`Error en actualizar(${id}):`, err);
+    throw err; // ← se relanza para que el UI lo muestre
+  }
+},
   // ==============================
   // ELIMINAR CAMPEONATO
   // ==============================
@@ -225,5 +242,16 @@ export const CampeonatosService = {
       console.error("Error en listarCategorias:", err);
       return [];
     }
+  },
+
+// generar partidos
+async generarPartidos(id: string) {
+  const res = await apiFetch(`/campeonatos/${id}/generar-partidos`, {
+    method: "POST"
+  });
+
+  if (!res.success) {
+    throw new Error(res.error || "No se pudieron generar los partidos");
   }
+}
 };

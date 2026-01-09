@@ -7,6 +7,8 @@ import EquipoForm from "@/components/equipos/EquipoForm";
 import EquipoTable from "@/components/equipos/EquipoTabla";
 import { CategoriasService } from "@/services/categorias.service"; // Asegúrate de tener este servicio
 import { Categoria } from "@/types/categoria";
+import { CanchasService } from "@/services/canchas.service";
+import { Cancha } from "@/types/cancha";
 
 
 // Tipo para categorías (ajústalo según tu proyecto)
@@ -15,6 +17,7 @@ import { Categoria } from "@/types/categoria";
 export default function EquiposPage() {
   const [equipos, setEquipos] = useState<Equipo[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [canchas, setCanchas] = useState<Cancha[]>([]);
   const [editing, setEditing] = useState<Equipo | undefined>();
   const [loading, setLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -43,16 +46,28 @@ const cargarCategorias = async () => {
     setCategorias([]);
   }
 };
+const cargarCanchas = async () => {
+  try {
+    const data = await CanchasService.listar();
+    setCanchas(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Error al cargar canchas:", err);
+    setCanchas([]);
+  }
+};
+
 
   useEffect(() => {
     cargarEquipos();
     cargarCategorias();
+    cargarCanchas();
   }, []);
 
   const onSuccess = () => {
     setEditing(undefined);
     setIsFormOpen(false);
     cargarEquipos(); // 🔄 RECARGA REAL
+    cargarCanchas(); // Recarga canchas si es necesario
   };
 
   return (
@@ -105,6 +120,7 @@ const cargarCategorias = async () => {
                   equipo={editing} 
                   onSuccess={onSuccess} 
                   categorias={categorias}
+                  canchas={canchas}
                 />
               </div>
             </div>
@@ -129,6 +145,7 @@ const cargarCategorias = async () => {
                   }}
                   recargar={cargarEquipos}
                   categorias={categorias}
+                  canchas={canchas}
                 />
               )}
             </div>

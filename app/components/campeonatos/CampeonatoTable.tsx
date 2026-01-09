@@ -18,10 +18,13 @@ import {
   Users,
   AlertCircle,
   Loader2,
-  X
+  X,
+  Footprints, // <-- CAMBIO AQUÍ (era Soccer)
+  CheckCircle
 } from "lucide-react";
 import CampeonatoModal from "./CampeonatoModal";
 import CampeonatoForm from "./CampeonatoForm";
+import { toast } from "react-hot-toast";
 
 export default function CampeonatoTable() {
   const [campeonatos, setCampeonatos] = useState<Campeonato[]>([]);
@@ -32,6 +35,7 @@ export default function CampeonatoTable() {
   const [totalPaginas, setTotalPaginas] = useState(1);
   const [searchLocal, setSearchLocal] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [generandoId, setGenerandoId] = useState<string | null>(null);
   
   // Estados para los modales
   const [modalDetallesOpen, setModalDetallesOpen] = useState(false);
@@ -102,10 +106,11 @@ export default function CampeonatoTable() {
     const inicio = new Date(fechaInicio);
     const fin = new Date(fechaFin);
     
-    if (hoy < inicio) return "pendiente";
+    if (hoy < inicio) return "proximo";
     if (hoy > fin) return "finalizado";
     return "en_curso";
   };
+  
 
   const formatearFecha = (fecha?: string) => {
     if (!fecha) return "No definida";
@@ -115,10 +120,43 @@ export default function CampeonatoTable() {
       year: 'numeric'
     });
   };
+  
 
   const handleVerDetalles = (campeonato: Campeonato) => {
     setSelectedCampeonato(campeonato);
     setModalDetallesOpen(true);
+  };
+
+  const handleGenerarPartidos = async (idCampeonato: string) => {
+    try {
+      const confirmacion = window.confirm(
+        "⚠️ ¿Generar los partidos?\n\n" +
+        "✅ Esta acción creará todos los partidos del campeonato\n" +
+        "🚫 Una vez generados NO se podrán editar ni eliminar el partido\n\n" +
+        "¿Continuar?"
+      );
+      
+      if (!confirmacion) return;
+
+      setGenerandoId(idCampeonato);
+      await CampeonatosService.generarPartidos(idCampeonato);
+      
+      toast.success("✅ Fixture generado exitosamente");
+      
+      // 🔄 Recargar lista de campeonatos
+      await cargarCampeonatos();
+
+    } catch (e: any) {
+      console.error("Error al generar partidos:", e);
+      
+      if (e.message.includes("ya fueron generados")) {
+        toast.error("❌ Los partidos YA fueron generados");
+      } else {
+        toast.error(e.message || "❌ Error al generar partidos");
+      }
+    } finally {
+      setGenerandoId(null);
+    }
   };
 
   const handleEdit = (campeonato: Campeonato) => {
@@ -195,6 +233,21 @@ export default function CampeonatoTable() {
       {estado ? 'Activo' : 'Inactivo'}
     </span>
   );
+
+  // Función para mostrar estado de partidos
+  const getPartidosEstado = (partidosGenerados: boolean) => {
+    if (partidosGenerados) {
+      return (
+        <div className="flex items-center gap-1 mt-1">
+          <CheckCircle className="h-3 w-3 text-green-600" />
+          <span className="text-xs text-green-700 font-medium">
+            Fixture generado
+          </span>
+        </div>
+      );
+    }
+    return null;
+  };
 
   if (loading && campeonatos.length === 0) {
     return (
@@ -302,6 +355,11 @@ export default function CampeonatoTable() {
               ) : (
                 campeonatos.map((campeonato) => {
                   const estadoCalculado = calcularEstado(campeonato.fecha_inicio, campeonato.fecha_fin);
+                  const hoy = new Date();
+                 const puedeEditar = (campeonato.fecha_inicio ? new Date(campeonato.fecha_inicio) > hoy : true) 
+                   && !campeonato.partidos_generados;
+                  const partidosGenerados = campeonato.partidos_generados || false;
+
                   const totalEquipos = campeonato.grupos?.reduce(
                     (total, grupo) => total + (grupo.equipos?.length || 0), 0
                   ) || 0;
@@ -328,6 +386,8 @@ export default function CampeonatoTable() {
                                 {campeonato.descripcion}
                               </div>
                             )}
+                            {/* Mostrar estado de partidos */}
+                            {getPartidosEstado(partidosGenerados)}
                           </div>
                         </div>
                       </td>
@@ -380,38 +440,60 @@ export default function CampeonatoTable() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handleVerDetalles(campeonato)}
-                            className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                            title="Ver detalles"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          
-                          <button
-                            onClick={() => handleEdit(campeonato)}
-                            className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-lg transition-colors"
-                            title="Editar"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          
-                          <button
-                            onClick={() => handleDelete(campeonato.id_campeonato, campeonato.nombre)}
-                            disabled={deletingId === campeonato.id_campeonato}
-                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            title="Eliminar"
-                          >
-                            {deletingId === campeonato.id_campeonato ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="h-4 w-4" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
+            
+ <td className="px-6 py-4">
+  <div className="flex items-center gap-1">
+    {/* 🔍 Ver detalles - SIEMPRE */}
+    <button
+      onClick={() => handleVerDetalles(campeonato)}
+      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+      title="Ver detalles"
+    >
+      <Eye className="h-4 w-4" />
+    </button>
+    
+    {/* ⚽ Generar partidos - SOLO si NO han sido generados */}
+    {!campeonato.partidos_generados && (
+      <button
+        onClick={() => handleGenerarPartidos(campeonato.id_campeonato)}
+        disabled={generandoId === campeonato.id_campeonato}
+        className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        title="Generar partidos"
+      >
+        {generandoId === campeonato.id_campeonato ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Footprints className="h-4 w-4" />
+        )}
+      </button>
+    )}
+
+    {/* ✏️ Editar - SOLO si NO han sido generados partidos */}
+    {!campeonato.partidos_generados && (
+      <button
+        onClick={() => handleEdit(campeonato)}
+        className="p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded-lg transition-colors"
+        title="Editar"
+      >
+        <Edit className="h-4 w-4" />
+      </button>
+    )}
+
+    {/* 🗑️ Eliminar - SIEMPRE */}
+    <button
+      onClick={() => handleDelete(campeonato.id_campeonato, campeonato.nombre)}
+      disabled={deletingId === campeonato.id_campeonato}
+      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      title="Eliminar"
+    >
+      {deletingId === campeonato.id_campeonato ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Trash2 className="h-4 w-4" />
+      )}
+    </button>
+  </div>
+</td>
                     </tr>
                   );
                 })

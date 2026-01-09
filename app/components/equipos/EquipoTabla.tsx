@@ -9,13 +9,15 @@ interface EquipoTableProps {
   recargar: () => void;
   onEditar?: (equipo: Equipo) => void;
   categorias: Array<{ id_categoria: string; nombre: string }>;
+  canchas: Array<{ id_cancha: string; nombre: string }>;
 }
 
 export default function EquipoTable({ 
   equipos = [], 
   recargar, 
   onEditar,
-  categorias 
+  categorias = [],
+  canchas = [] // Mismo valor por defecto que categorias
 }: EquipoTableProps) {
   const [eliminando, setEliminando] = useState<string | null>(null);
   const [paginaActual, setPaginaActual] = useState(1);
@@ -30,10 +32,18 @@ export default function EquipoTable({
     [equipos]
   );
 
-  // Obtener nombre de categoría por ID
+  // Obtener nombre de categoría por ID - MISMA IMPLEMENTACIÓN
   const getNombreCategoria = (id: string) => {
+    if (!id) return "Sin categoría";
     const categoria = categorias.find(c => c.id_categoria === id);
     return categoria ? categoria.nombre : "Sin categoría";
+  };
+
+  // Obtener nombre de cancha por ID - MISMA IMPLEMENTACIÓN
+  const getNombreCancha = (id: string) => {
+    if (!id) return "Sin cancha asignada";
+    const cancha = canchas.find(c => c.id_cancha === id);
+    return cancha ? cancha.nombre : "Sin cancha asignada";
   };
 
   // Aplicar filtros de búsqueda
@@ -45,7 +55,8 @@ export default function EquipoTable({
         equipo.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
         equipo.nombre_representante?.toLowerCase().includes(busqueda.toLowerCase()) ||
         equipo.celular_representante?.toLowerCase().includes(busqueda.toLowerCase()) ||
-        getNombreCategoria(equipo.categoria_id).toLowerCase().includes(busqueda.toLowerCase());
+        getNombreCategoria(equipo.categoria_id).toLowerCase().includes(busqueda.toLowerCase()) ||
+        getNombreCancha(equipo.cancha_id || "").toLowerCase().includes(busqueda.toLowerCase());
       
       // Filtrar por estado
       const coincideEstado = 
@@ -60,7 +71,7 @@ export default function EquipoTable({
       
       return coincideBusqueda && coincideEstado && coincideCategoria;
     });
-  }, [equiposActivos, busqueda, filtroEstado, filtroCategoria, categorias]);
+  }, [equiposActivos, busqueda, filtroEstado, filtroCategoria, categorias, canchas]);
 
   // Calcular paginación
   const totalPaginas = Math.max(1, Math.ceil(equiposFiltrados.length / itemsPorPagina));
@@ -122,7 +133,6 @@ export default function EquipoTable({
   };
 
   const cambiarItemsPorPagina = (cantidad: number) => {
-    console.log("Cambiando items por página a:", cantidad);
     setItemsPorPagina(cantidad);
   };
 
@@ -250,10 +260,13 @@ export default function EquipoTable({
                 Equipo
               </th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                Descripcion
+                Descripción
               </th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Representante
+              </th>
+              <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                Cancha
               </th>
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                 Celular
@@ -269,7 +282,7 @@ export default function EquipoTable({
           <tbody className="bg-white divide-y divide-gray-200">
             {equiposPagina.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
                   {busqueda || filtroEstado !== "todos" || filtroCategoria !== "todos"
                     ? "No se encontraron equipos con los filtros aplicados" 
                     : "No hay equipos disponibles"}
@@ -302,17 +315,20 @@ export default function EquipoTable({
                         <div className="text-sm font-medium text-gray-900">
                           {e.nombre || "-"}
                         </div>
-                       
-                          <div className="text-xs text-gray-500 truncate max-w-xs">{getNombreCategoria(e.categoria_id)}</div>
-                        
+                        <div className="text-xs text-gray-500 truncate max-w-xs">
+                          {getNombreCategoria(e.categoria_id)}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
-                    {e.descripcion}
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 max-w-xs truncate">
+                    {e.descripcion || "-"}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                     {e.nombre_representante || "-"}
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    {getNombreCancha(e.cancha_id || "")} {/* ¡IMPORTANTE: cancha_id puede ser undefined! */}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                     {e.celular_representante || "-"}
@@ -374,7 +390,7 @@ export default function EquipoTable({
         </table>
       </div>
 
-      {/* Paginación - Igual que en ArbitroTable pero adaptado */}
+      {/* Paginación */}
       {totalPaginas > 1 && (
         <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -487,6 +503,10 @@ export default function EquipoTable({
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
                 {categorias.length} categorías
+              </span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+                {canchas.length} canchas
               </span>
             </div>
             <div className="text-sm text-gray-500">

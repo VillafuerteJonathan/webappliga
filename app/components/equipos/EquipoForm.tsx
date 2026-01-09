@@ -4,17 +4,20 @@ import { useState, useEffect } from "react";
 import { EquiposService } from "@/services/equipos.service";
 import { Equipo } from "@/types/equipo";
 
+
 interface Props {
   equipo?: Equipo;
   onSuccess: () => void;
   categorias: Array<{ id_categoria: string; nombre: string }>; // Asegúrate de tener este tipo
+  canchas: Array<{ id_cancha: string; nombre: string }>; // Tipo para canchas
 }
 
-export default function EquipoForm({ equipo, onSuccess, categorias }: Props) {
+export default function EquipoForm({ equipo, onSuccess, categorias, canchas }: Props) {
   const [form, setForm] = useState({
     nombre: "",
     descripcion: "",
     categoria_id: "",
+    cancha_id: "",
     logo_url: "",
     nombre_representante: "",
     celular_representante: "",
@@ -33,6 +36,7 @@ export default function EquipoForm({ equipo, onSuccess, categorias }: Props) {
         nombre: equipo.nombre ?? "",
         descripcion: equipo.descripcion ?? "",
         categoria_id: equipo.categoria_id ?? "",
+        cancha_id: equipo.cancha_id ?? "",
         logo_url: equipo.logo_url ?? "",
         nombre_representante: equipo.nombre_representante ?? "",
         celular_representante: equipo.celular_representante ?? "",
@@ -43,6 +47,7 @@ export default function EquipoForm({ equipo, onSuccess, categorias }: Props) {
         nombre: "",
         descripcion: "",
         categoria_id: "",
+        cancha_id: "",
         logo_url: "",
         nombre_representante: "",
         celular_representante: "",
@@ -109,6 +114,7 @@ export default function EquipoForm({ equipo, onSuccess, categorias }: Props) {
           nombre: "",
           descripcion: "",
           categoria_id: "",
+          cancha_id: "",
           logo_url: "",
           nombre_representante: "",
           celular_representante: "",
@@ -132,28 +138,65 @@ export default function EquipoForm({ equipo, onSuccess, categorias }: Props) {
   // =============================
   return (
     <form onSubmit={submit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input label="Nombre del Equipo *" value={form.nombre} error={errors.nombre}
-          onChange={v => setForm({ ...form, nombre: v })} />
+     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  {/* NOMBRE (arriba, ancho completo) */}
+  <div className="md:col-span-2">
+    <Input
+      label="Nombre del Equipo *"
+      value={form.nombre}
+      error={errors.nombre}
+      onChange={v => setForm({ ...form, nombre: v })}
+    />
+  </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">Categoría *</label>
-          <select
-            value={form.categoria_id}
-            onChange={e => setForm({ ...form, categoria_id: e.target.value })}
-            className={`w-full px-4 py-2 border rounded-lg ${
-              errors.categoria_id ? "border-red-300" : "border-gray-300"
-            }`}
-          >
-            <option value="">Seleccionar categoría</option>
-            {categorias.map(cat => (
-              <option key={cat.id_categoria} value={cat.id_categoria}>
-                {cat.nombre}
-              </option>
-            ))}
-          </select>
-          {errors.categoria_id && <p className="text-xs text-red-600 mt-1">{errors.categoria_id}</p>}
-        </div>
+  {/* CATEGORÍA (abajo izquierda) */}
+   <div>
+    <label className="block text-sm font-medium mb-1">
+      Categoría *
+    </label>
+    <select
+      value={form.categoria_id}
+      onChange={e => setForm({ ...form, categoria_id: e.target.value })}
+      className={`w-full px-4 py-2 border rounded-lg ${
+        errors.categoria_id ? "border-red-300" : "border-gray-300"
+      }`}
+    >
+      <option value="">Seleccionar categoría</option>
+      {(categorias ?? []).map(cat => (
+        <option key={cat.id_categoria} value={cat.id_categoria}>
+          {cat.nombre}
+        </option>
+      ))}
+    </select>
+    {errors.categoria_id && (
+      <p className="text-xs text-red-600 mt-1">{errors.categoria_id}</p>
+    )}
+  </div>
+
+  {/* CANCHA */}
+  <div>
+    <label className="block text-sm font-medium mb-1">
+      Cancha *
+    </label>
+    <select
+      value={form.cancha_id}
+      onChange={e => setForm({ ...form, cancha_id: e.target.value })}
+      className={`w-full px-4 py-2 border rounded-lg ${
+        errors.cancha_id ? "border-red-300" : "border-gray-300"
+      }`}
+    >
+      <option value="">Seleccionar cancha</option>
+      {(canchas ?? []).map(cancha => (
+        <option key={cancha.id_cancha} value={cancha.id_cancha}>
+          {cancha.nombre}
+        </option>
+      ))}
+    </select>
+    {errors.cancha_id && (
+      <p className="text-xs text-red-600 mt-1">{errors.cancha_id}</p>
+    )}
+  </div>
+
 
         <Input label="URL del Logo" value={form.logo_url} error={errors.logo_url}
           onChange={v => setForm({ ...form, logo_url: v })} full />
