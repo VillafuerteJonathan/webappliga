@@ -39,21 +39,23 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
     app/
     ├── (auth)/                          # 🔒 Rutas de autenticación
     │   ├── login/
-    │   │   └── page.tsx                 # Página de inicio de sesión
-    │   └── register/
-    │       └── page.tsx                 # (Opcional) Registro de usuario
-
-    (private)/                      # 🔐 Área interna / protegida
+    │   │   └── page.tsx                 # Página de inicio de sesión             
+    ├── (private)/                      # 🔐 Área interna / protegida
     │
     ├── dashboard/
-    │   └── page.tsx                # Panel principal (ejemplo)
+    │   └── page.tsx    
+    ├── actas/
+    │   ├── consulta/
+    │   │   └── page.tsx
+    │   ├── cerificacion/
+    │   │   └── page.tsx            # Panel principal (ejemplo)
     │
     ├── campeonatos/
     │   ├── categorias/
     │   │   └── page.tsx
     │   ├── grupos/
     │   │   └── page.tsx
-    │   └── lista/
+    │   └── torneos/
     │       └── page.tsx
     │
     ├── gestion/
@@ -82,12 +84,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
     │   └── layout.tsx                   # Layout común para páginas públicas
 
     ├── api/                             # ⚙️ Endpoints tipo REST
-    │   ├── auth/
+    │   ├── login/
     │   │   └── route.ts                 # Ejemplo: POST /api/auth
-    │   ├── users/
-    │   │   └── route.ts                 # Ejemplo: GET /api/users
-    │   └── route.ts                     # Ejemplo: /api root
-
     ├── components/                      # 🧩 Componentes reutilizables
     │   ├── layout/
     │   │   ├── Header.tsx               # Encabezado principal

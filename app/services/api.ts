@@ -4,10 +4,14 @@ export async function apiFetch<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
+  // 🔑 Obtener token desde localStorage
+  const token = localStorage.getItem("token");
+
   const res = await fetch(`${API_URL}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     ...options,
   });
@@ -19,17 +23,13 @@ export async function apiFetch<T = any>(
     data = {};
   }
 
-  // 🔴 Errores críticos del servidor
   if (res.status >= 500) {
-    throw data; // Lanzar solo errores 500+
+    throw data;
   }
 
-  // 🟡 Errores de negocio (400, 409, 422...)
-  // No lanzar excepción, solo devolver el objeto
   if (!res.ok) {
-    return data; // El frontend puede manejar `success: false` o `message`
+    return data;
   }
 
-  // ✅ Respuesta exitosa
   return data as T;
 }
